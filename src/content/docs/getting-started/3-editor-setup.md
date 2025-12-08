@@ -11,7 +11,7 @@ The open source Luau Language Server, also known as [`luau-lsp`](https://github.
 Once you've installed both the language server and Lune, you can run the following command to generate type definition files and create or update a standardized `.luaurc` configuration file:
 
 ```bash title="Terminal"
-lune setup
+lune --init
 ```
 
 This should be all you need to get up and running. You may, however, need to restart your editor for the changes to take effect.
