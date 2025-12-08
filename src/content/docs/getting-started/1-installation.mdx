@@ -4,201 +4,112 @@ title: Installation
 
 import { Aside, Steps } from "@astrojs/starlight/components";
 
-The preferred way of installing Lune is using [Rokit](https://github.com/rojo-rbx/rokit), a toolchain manager for Roblox projects. Rokit can manage your installed version of Lune and other ecosystem tools, and allows you to easily upgrade to newer versions as they become available.
+## Windows Installer (Recommended)
+
+Download the MSI installer for automatic PATH setup:
 
 <Steps>
 
-1. ### Installing Rokit
+1. ### Download MSI
 
-   Follow the installation instructions on the [Rokit](https://github.com/rojo-rbx/rokit) page.
+   Go to [GitHub Releases](https://github.com/yanlvl99/lune-custom-build/releases/latest) and download `lune-installer.msi`.
 
-2. ### Installing Lune
+2. ### Run Installer
 
-   Navigate to your project directory using your terminal, and run the following command:
+   Double-click the MSI file. Options available:
+   - **Install for all users** (requires admin)
+   - **Install for current user only**
+   - Automatically adds to PATH
+
+3. ### Verify Installation
+
+   Open a new terminal and run:
 
    ```bash title="Terminal"
-   rokit add lune
-   ```
-
-3. ### Upgrading Lune
-
-   When a new version of Lune becomes available, Rokit makes it easy to upgrade. Navigate to your project directory using your terminal again, and run the following command:
-
-   ```bash title="Terminal"
-   rokit update lune
+   lune --version
    ```
 
 </Steps>
 
-If you prefer to install Lune globally and have it accessible on your entire system, instead of only in a specific project, you can do this with Rokit as well. Just add the `--global` option to the end of the commands above.
+## Manual Installation
 
-## Other Installation Options
+### Windows
 
-<details>
-<summary>Using GitHub Releases</summary>
+<Steps>
 
-You can download pre-built binaries for most systems directly from the [GitHub Releases](https://github.com/lune-org/lune/releases) page. There are many tools that can install binaries directly from releases, and it's up to you to choose what tool to use. Lune is compatible with both [Foreman](https://github.com/Roblox/foreman) and [Aftman](https://github.com/LPGhatguy/aftman).
+1. Download `lune-windows-x86_64.zip` from [Releases](https://github.com/yanlvl99/lune-custom-build/releases/latest)
 
-</details>
+2. Extract `lune.exe` to a folder (e.g., `C:\Program Files\Lune`)
 
-<details>
-<summary>Community-maintained</summary>
+3. Add to PATH:
+   - Open Start → "Environment Variables"
+   - Edit `Path` → Add the folder path
+   - Click OK and restart terminal
 
-### Scoop
+</Steps>
 
-Windows users can use [Scoop](https://scoop.sh) to install Lune.
-
-```sh filename="PowerShell"
-# Add the bucket
-scoop bucket add lune https://github.com/CompeyDev/lune-packaging.git
-
-# Install the package
-scoop install lune
-```
-
-### Homebrew
-
-macOS and Linux users can use [Homebrew](https://brew.sh) to install Lune.
+### Linux
 
 ```bash title="Terminal"
-# Installs latest stable precompiled binary
-brew install lune
+# Download and extract
+curl -LO https://github.com/yanlvl99/lune-custom-build/releases/latest/download/lune-linux-x86_64.tar.gz
+tar -xzf lune-linux-x86_64.tar.gz
+
+# Move to PATH
+sudo mv lune /usr/local/bin/
+chmod +x /usr/local/bin/lune
+
+# Verify
+lune --version
 ```
 
-**_or_**
+### macOS
 
 ```bash title="Terminal"
-# Builds from latest stable source
-brew install lune --build-from-source
+# Intel Mac
+curl -LO https://github.com/yanlvl99/lune-custom-build/releases/latest/download/lune-macos-x86_64.tar.gz
+
+# Apple Silicon (M1/M2/M3)
+curl -LO https://github.com/yanlvl99/lune-custom-build/releases/latest/download/lune-macos-aarch64.tar.gz
+
+# Extract and install
+tar -xzf lune-macos-*.tar.gz
+sudo mv lune /usr/local/bin/
+chmod +x /usr/local/bin/lune
 ```
 
-### APT
+## Using Rokit
 
-APT is a package manager for Debian-based Linux distributions that uses `dpkg` to install packages. Follow the instructions at the unofficial [lune-packaging](https://github.com/CompeyDev/lune-packaging#apt) repository to install Lune using APT.
-
-<Aside type="caution">
-  The APT repository is hosted by the community and is not endorsed by or
-  affiliated with Lune.
-</Aside>
-
-### AppImage
-
-AppImages are platform-independent sandboxed binaries that work out of the box. Go to the [GitHub Actions Page](https://github.com/CompeyDev/lune-packaging/actions/workflows/appimage.yaml), and download the artifact suitable for your architecture from the build artifacts.
-
-### AUR (Arch User Repository)
-
-There are a number of packages available on the AUR:
-
-- `lune` - Builds from the latest stable release source
-- `lune-git` - Builds from the latest commit in the repository (unstable)
-- `lune-bin` - Installs a precompiled binary from GitHub Release artifacts
-
-These can be installed with your preferred AUR package manager:
+[Rokit](https://github.com/rojo-rbx/rokit) is a toolchain manager for Roblox projects.
 
 ```bash title="Terminal"
-paru -S [PACKAGE_NAME]
+rokit add yanlvl99/lune-custom-build@0.10.5
 ```
 
-**_or_**
+To upgrade:
 
 ```bash title="Terminal"
-yay -S [PACKAGE_NAME]
+rokit update lune
 ```
 
-<Aside type="caution">
-  Only one of these AUR packages should be installed at a time to prevent
-  conflicts.
-</Aside>
+## Building from Source
 
-### Nix
-
-macOS\* and Linux users can use [Nix](https://nixos.org/) to install Lune.
-
-<Aside type="caution">
-  *the macOS build is currently broken. Help is wanted debugging [this
-  issue](https://github.com/NixOS/nixpkgs/blob/36f9963ac7ea0a471c1d408e90edec093a819d83/pkgs/development/interpreters/lune/default.nix).
-</Aside>
-
-<details>
-<summary>Imperatively</summary>
-
-**NixOS**
+Requires [Rust](https://rustup.rs/) installed:
 
 ```bash title="Terminal"
-nix-env -iA nixos.lune
+git clone https://github.com/yanlvl99/lune-custom-build
+cd lune-custom-build
+cargo build --release
 ```
 
-**Non-NixOS**
-
-```bash title="Terminal"
-nix-env -iA nixpkgs.lune
-# If you are using flakes
-nix profile install nixpkgs#lune
-```
-
-</details>
-
-<details>
-<summary>Declaratively</summary>
-
-**With [home-manager](https://github.com/nix-community/home-manager)**
-
-```nix
-home.packages = with pkgs; [
-  lune
-];
-```
-
-**System-wide NixOS configuration**
-
-```nix
-environment.systemPackages = with pkgs; [
-  lune
-];
-```
-
-</details>
-
-<details>
-<summary>Temporarily</summary>
-
-You can temporarily use Lune in your shell. This is useful to try out Lune before deciding to permanently install it.
-
-```bash title="Terminal"
-nix-shell -p lune
-```
-
-</details>
-
-</details>
-
-<details>
-<summary>Using crates.io</summary>
-
-### Building from source
-
-Building and installing from source requires the latest version of [Rust & Cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html) to be installed on your system. Once installed, run the following command in your terminal:
-
-```bash title="Terminal"
-cargo install lune --locked
-```
-
-### Binstall
-
-[`cargo binstall`](https://github.com/cargo-bins/cargo-binstall) provides a simple mechanism for installing Rust binaries from crates.io without compiling from source (unlike `cargo install`). Lune is packaged in a `binstall`-compatible way.
-
-With `binstall` installed and in your path, run:
-
-```bash title="Terminal"
-cargo binstall lune
-```
-
-</details>
+The binary will be at `target/release/lune` (or `lune.exe` on Windows).
 
 ## Next Steps
 
-Congratulations! You've installed Lune and are now ready to write your first script.
+After installation, initialize your first project:
 
-A great place to continue reading is the [Lune Book](../../the-book/1-hello-lune), which is also part of the official Lune documentation, and will give you a guided and comprehensive introduction to Lune.
+```bash title="Terminal"
+lune --init
+```
 
-Or, if you want to dive right into specific resources, check out the API reference in the sidebar.
+Continue reading in the [Lune Book](../../the-book/1-hello-lune) for a complete introduction.
