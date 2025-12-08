@@ -159,12 +159,12 @@ print("After firing")
 
 </details>
 
-## Conclusion
+## Next Steps
 
-Congratulations! You've completed The Lune Book and now have all the tools you need to build powerful scripts with Lune.
+Now that you understand the task scheduler, continue learning about additional features:
 
-You've learned how to work with files, make network requests, handle user input, organize code into modules, spawn external processes, and how to wrangle the task scheduler. More importantly, you've seen how these pieces work together to create scripts that are both simple to write and capable of handling complex real-world problems.
+- [SQL Database](./10-sql-database) - Store data persistently with SQLite
+- [Extended Globals](./11-extended-globals) - `math.clamp`, `uuid.v4`, and more
+- [UDP & TCP Sockets](./12-udp-tcp-sockets) - Low-level networking
 
-The API reference in the sidebar contains detailed documentation for all of Lune's capabilities, and the community is always ready to help if you get stuck.
-
-Now go build! 🚀
+The API reference in the sidebar contains detailed documentation for all of Lune's capabilities.
