@@ -98,6 +98,18 @@ export default defineConfig({
               label: "9 ∙ The Task Scheduler",
               slug: "the-book/9-task-scheduler",
             },
+            {
+              label: "10 ∙ SQL Database",
+              slug: "the-book/10-sql-database",
+            },
+            {
+              label: "11 ∙ Extended Globals",
+              slug: "the-book/11-extended-globals",
+            },
+            {
+              label: "12 ∙ UDP & TCP Sockets",
+              slug: "the-book/12-udp-tcp-sockets",
+            },
           ],
         },
         {
