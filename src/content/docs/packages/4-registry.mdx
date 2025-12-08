@@ -1,0 +1,70 @@
+---
+title: Registry
+description: How the Lune package registry works
+---
+
+# Package Registry
+
+The central registry stores package manifests that point to Git repositories.
+
+## Registry Location
+
+```
+https://github.com/yanlvl99/lune-custom-build/tree/main/manifest
+```
+
+Each package has a JSON file: `manifest/<package-name>.json`
+
+## Manifest Format
+
+```json
+{
+  "name": "colors",
+  "description": "ANSI color utilities for Luau",
+  "repository": "https://github.com/someone/lune-colors.git"
+}
+```
+
+### Fields
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `name` | Yes | Package name (must match filename) |
+| `description` | No | Brief description |
+| `repository` | Yes | Git repository URL |
+
+:::note
+Version is **not** specified in the manifest. The installer fetches the latest semver tag from the repository.
+:::
+
+## Adding a Package to Registry
+
+1. Fork the registry repository
+2. Add your manifest file to `/manifest/<name>.json`
+3. Open a Pull Request
+
+### Example PR
+
+```
+Add 'my-package' to registry
+
+manifest/my-package.json:
+{
+  "name": "my-package",
+  "description": "My awesome Lune package",
+  "repository": "https://github.com/me/my-package.git"
+}
+```
+
+## How Resolution Works
+
+1. User runs `lune --install colors`
+2. Installer fetches `manifest/colors.json` from registry
+3. Reads `repository` field
+4. Lists remote git tags
+5. Parses tags as semver, sorts descending
+6. Clones at the highest version tag
+
+## Self-Hosted Registry
+
+You can use a custom registry by modifying the `REGISTRY_REPO` constant in the Lune source code.

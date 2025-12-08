@@ -4,27 +4,71 @@ title: Command-Line Usage
 
 ## Running Scripts
 
-Once you've written a script file, for example `script-name.luau`, you can run it as follows:
+Once you've written a script file, for example `script-name.luau`, you can run it:
+
+```bash title="Terminal"
+lune script-name.luau
+```
+
+Or using the legacy syntax:
 
 ```bash title="Terminal"
 lune run script-name
 ```
 
-Lune will look for the file `script-name.luau`**_<sup>[1]</sup>_** in a few locations:
+Lune will look for the file in:
 
 - The current directory
-- The folder `lune` in the current directory, if it exists
-- The folder `.lune` in the current directory, if it exists
-- The folder `lune` in your home directory, if it exists
-- The folder `.lune` in your home directory, if it exists
+- The folder `lune` in the current directory
+- The folder `.lune` in the current directory
+- The folder `lune` in your home directory
+- The folder `.lune` in your home directory
+
+## Package Management
+
+### Initialize a project
+
+```bash title="Terminal"
+lune --init
+```
+
+Creates `lune.config.json`, `.luaurc`, and `lune_packages/` directory.
+
+### Install packages
+
+```bash title="Terminal"
+lune --install colors networking
+```
+
+Or install from config file:
+
+```bash title="Terminal"
+lune --install
+```
 
 ## Listing Scripts
 
 ```bash title="Terminal"
-lune list
+lune --list
 ```
 
-This command lists all scripts found in `lune` or `.lune` directories, including any top-level description comments. Lune description comments are written at the top of a file and start with a Lua-style comment arrow (`-->`).
+Lists all scripts found in `lune` or `.lune` directories.
+
+## Building Executables
+
+```bash title="Terminal"
+lune --build script.luau
+```
+
+Compiles your script into a standalone executable.
+
+## REPL
+
+```bash title="Terminal"
+lune --repl
+```
+
+Starts an interactive Luau REPL session.
 
 ## Advanced Usage
 
@@ -32,7 +76,7 @@ This command lists all scripts found in `lune` or `.lune` directories, including
 lune run -
 ```
 
-This runs a script passed to Lune using stdin, which is useful for running scripts piped from external sources. Here's an example:
+Runs a script passed via stdin:
 
 ```bash title="Terminal"
 echo "print 'Hello, terminal!'" | lune run -
@@ -40,4 +84,4 @@ echo "print 'Hello, terminal!'" | lune run -
 
 ---
 
-**_<sup>[1]</sup>_** _Lune also supports files with the `.lua` extension, but using the `.luau` extension is highly recommended. Additionally, if you don't want Lune to look in subdirectories or try to find files with `.lua` / `.luau` extensions at all, you can provide an absolute file path. This will disable all file path parsing and checks, and just run the file directly._
+**Note:** Lune supports both `.luau` and `.lua` extensions, but `.luau` is recommended.

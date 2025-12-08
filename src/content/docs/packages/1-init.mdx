@@ -1,0 +1,52 @@
+---
+title: Initialize Project
+description: How to initialize a new Lune project
+---
+
+# Initialize Project
+
+The `--init` flag creates the necessary files for a Lune project with package management.
+
+## Usage
+
+```bash
+lune --init
+```
+
+## What it creates
+
+1. **lune.config.json** - Package configuration file
+2. **.luaurc** - Alias configuration for Luau LSP
+3. **lune_packages/** - Directory for installed packages
+
+## Example Output
+
+```
+Lune Project Initializer
+[OK] Created lune.config.json
+[OK] Created .luaurc
+[OK] Created lune_packages/
+
+✓ Project initialized!
+  Use lune --install <pkg> to install packages
+```
+
+## Files Created
+
+### lune.config.json
+
+```json
+{
+  "packages": []
+}
+```
+
+### .luaurc
+
+```json
+{
+  "aliases": {}
+}
+```
+
+After installing packages, these files will be populated automatically with package references and path aliases.

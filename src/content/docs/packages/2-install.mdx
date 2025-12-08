@@ -1,0 +1,70 @@
+---
+title: Installing Packages
+description: How to install packages with Lune
+---
+
+# Installing Packages
+
+The `--install` flag manages package installation from the central registry.
+
+## Basic Usage
+
+### Install specific packages
+
+```bash
+lune --install colors networking ui-kit
+```
+
+### Install from lune.config.json
+
+```bash
+lune --install
+```
+
+This reads packages from your `lune.config.json` file and installs any that are missing.
+
+## What happens during installation
+
+1. **Fetch manifest** - Downloads package info from the registry
+2. **Resolve version** - Finds the latest semver-compatible git tag
+3. **Clone** - Shallow clones the repository to `lune_packages/`
+4. **Update config** - Adds the package to `lune.config.json`
+5. **Generate aliases** - Adds path aliases to `.luaurc`
+
+## Example Output
+
+```
+Lune Package Installer
+[1/4] Installing 2 package(s)
+  → colors
+    ↳ tag: v1.2.0
+    ✓ Installed
+  → networking
+    ↳ tag: v0.5.3
+    ✓ Installed
+[3/4] Updating lune.config.json
+[4/4] Generating .luaurc
+
+✓ 2 package(s) installed!
+```
+
+## Using installed packages
+
+After installation, you can require packages using their alias:
+
+```lua
+local Colors = require("@colors")
+local Net = require("@networking")
+```
+
+The aliases are defined in `.luaurc` and work with Luau LSP for autocompletion.
+
+## Package Location
+
+All packages are installed to `./lune_packages/<package-name>/`.
+
+The installer automatically detects the entry point by looking for:
+1. `init.luau`
+2. `main.luau`
+3. `lib/init.luau`
+4. `src/init.luau`

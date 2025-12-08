@@ -1,0 +1,78 @@
+---
+title: Creating Packages
+description: How to create your own Lune package
+---
+
+# Creating Packages
+
+You can create your own packages and publish them to the registry.
+
+## Package Structure
+
+A minimal package looks like this:
+
+```
+my-package/
+├── lune-pkg.json    # Package metadata (optional)
+├── README.md
+├── lib/
+│   └── init.luau    # Entry point
+```
+
+Or with a flat structure:
+
+```
+my-package/
+├── init.luau        # Entry point
+└── README.md
+```
+
+## Entry Points
+
+The installer looks for entry points in this order:
+
+1. `init.luau` - Root init file
+2. `main.luau` - Root main file
+3. `lib/init.luau` - Library pattern
+4. `src/init.luau` - Source pattern
+
+## Versioning
+
+Version is determined by **git tags**, not by any JSON file.
+
+Use semantic versioning for your tags:
+
+```bash
+git tag v1.0.0
+git push --tags
+```
+
+The installer will always fetch the **highest semver-compatible version**.
+
+Valid tag formats:
+- `v1.0.0` (with v prefix)
+- `1.0.0` (without v prefix)
+
+## Example Package
+
+```lua
+-- lib/init.luau
+local Colors = {}
+
+Colors.RED = "\x1b[31m"
+Colors.GREEN = "\x1b[32m"
+Colors.RESET = "\x1b[0m"
+
+function Colors.print(color: string, text: string)
+    print(color .. text .. Colors.RESET)
+end
+
+return Colors
+```
+
+## Publishing
+
+1. Create a Git repository for your package
+2. Tag a release with semver (`git tag v1.0.0`)
+3. Push tags (`git push --tags`)
+4. Add entry to the registry (see [Registry](/packages/4-registry))

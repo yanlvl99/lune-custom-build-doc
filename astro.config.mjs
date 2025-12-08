@@ -4,11 +4,11 @@ import starlight from "@astrojs/starlight";
 
 // https://astro.build/config
 export default defineConfig({
-  base: "/docs/",
-  site: "https://lune-org.github.io",
+  base: "/",
+  site: "https://yanlvl99.github.io/lune-custom-build-doc",
   integrations: [
     starlight({
-      title: "Lune",
+      title: "Lune Custom Build",
       logo: {
         src: "./src/assets/logo.svg",
         replacesTitle: true,
@@ -17,7 +17,7 @@ export default defineConfig({
         {
           icon: "github",
           label: "GitHub",
-          href: "https://github.com/lune-org/lune",
+          href: "https://github.com/yanlvl99/lune-custom-build",
         },
       ],
       sidebar: [
@@ -36,9 +36,26 @@ export default defineConfig({
               label: "Editor Setup",
               slug: "getting-started/3-editor-setup",
             },
+          ],
+        },
+        {
+          label: "Package Manager",
+          items: [
             {
-              label: "Security",
-              slug: "getting-started/4-security",
+              label: "Initialize Project",
+              slug: "packages/1-init",
+            },
+            {
+              label: "Installing Packages",
+              slug: "packages/2-install",
+            },
+            {
+              label: "Creating Packages",
+              slug: "packages/3-creating",
+            },
+            {
+              label: "Registry",
+              slug: "packages/4-registry",
             },
           ],
         },
@@ -81,6 +98,10 @@ export default defineConfig({
               label: "9 ∙ The Task Scheduler",
               slug: "the-book/9-task-scheduler",
             },
+            {
+              label: "10 ∙ SQL Database",
+              slug: "the-book/10-sql-database",
+            },
           ],
         },
         {
@@ -93,14 +114,6 @@ export default defineConfig({
             {
               label: "Example Scripts",
               slug: "roblox/2-examples",
-            },
-            {
-              label: "Remodel Migration",
-              slug: "roblox/3-remodel-migration",
-            },
-            {
-              label: "API Status",
-              slug: "roblox/4-api-status",
             },
           ],
         },
