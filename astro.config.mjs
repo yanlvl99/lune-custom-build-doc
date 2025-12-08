@@ -98,10 +98,6 @@ export default defineConfig({
               label: "9 ∙ The Task Scheduler",
               slug: "the-book/9-task-scheduler",
             },
-            {
-              label: "10 ∙ SQL Database",
-              slug: "the-book/10-sql-database",
-            },
           ],
         },
         {
