@@ -3,8 +3,6 @@ title: UDP & TCP Sockets
 description: Low-level network programming with UDP and TCP
 ---
 
-# UDP & TCP Sockets
-
 Lune Custom Build provides low-level socket APIs for network programming.
 
 ## UDP Sockets

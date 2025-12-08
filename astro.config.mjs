@@ -110,6 +110,10 @@ export default defineConfig({
               label: "12 ∙ UDP & TCP Sockets",
               slug: "the-book/12-udp-tcp-sockets",
             },
+            {
+              label: "13 ∙ FFI (Native Libraries)",
+              slug: "the-book/13-ffi",
+            },
           ],
         },
         {

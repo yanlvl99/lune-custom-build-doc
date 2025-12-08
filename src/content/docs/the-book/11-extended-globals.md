@@ -3,8 +3,6 @@ title: Extended Globals
 description: Additional global functions in Lune Custom Build
 ---
 
-# Extended Globals
-
 Lune Custom Build extends the standard Luau globals with additional utility functions.
 
 ## Math Extensions

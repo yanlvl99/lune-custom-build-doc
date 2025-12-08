@@ -3,8 +3,6 @@ title: SQL Database
 description: Working with SQLite databases in Lune
 ---
 
-# SQL Database
-
 Lune Custom Build includes a built-in SQLite database module for persistent data storage.
 
 ## Basic Usage
