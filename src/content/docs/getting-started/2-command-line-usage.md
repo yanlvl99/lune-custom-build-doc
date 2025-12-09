@@ -40,11 +40,26 @@ Creates `lune.config.json`, `.luaurc`, and `lune_packages/` directory.
 lune --install colors networking
 ```
 
+Or install a specific version:
+
+```bash title="Terminal"
+lune --install colors@1.0.0
+```
+
 Or install from config file:
 
 ```bash title="Terminal"
 lune --install
 ```
+
+### Update packages
+
+```bash title="Terminal"
+lune --updpkg
+```
+
+Updates all packages to their latest versions. After updating, the versions are locked in `lune.config.json`.
+
 
 ## Listing Scripts
 

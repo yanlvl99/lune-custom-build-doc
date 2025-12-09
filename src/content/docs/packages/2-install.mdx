@@ -13,6 +13,12 @@ The `--install` flag manages package installation from the central registry.
 lune --install colors networking ui-kit
 ```
 
+### Install a specific version
+
+```bash
+lune --install colors@1.0.0
+```
+
 ### Install from lune.config.json
 
 ```bash
@@ -21,13 +27,22 @@ lune --install
 
 This reads packages from your `lune.config.json` file and installs any that are missing.
 
+### Update all packages
+
+```bash
+lune --updpkg
+```
+
+Updates all installed packages to their latest versions and locks them in `lune.config.json`.
+
 ## What happens during installation
 
 1. **Fetch manifest** - Downloads package info from the registry
-2. **Resolve version** - Finds the latest semver-compatible git tag
-3. **Clone** - Shallow clones the repository to `lune_packages/`
-4. **Update config** - Adds the package to `lune.config.json`
-5. **Generate aliases** - Adds path aliases to `.luaurc`
+2. **Resolve version** - Finds the latest semver-compatible tag (or uses specified version)
+3. **Download** - Downloads and extracts the package to `lune_packages/`
+4. **Save info** - Creates `lune-pkg.json` with package metadata
+5. **Update config** - Adds the package to `lune.config.json`
+6. **Generate aliases** - Adds path aliases to `.luaurc`
 
 ## Example Output
 
