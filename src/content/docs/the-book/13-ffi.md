@@ -124,6 +124,43 @@ local strWithLen = ffi.string(ptr, 10)  -- Read exactly 10 bytes
 local value = ffi.cast(ptr, "i32")
 ```
 
+## Callbacks
+
+Create Lua functions that can be called from C code:
+
+```lua
+-- Create a callback with signature: int callback(int a, int b)
+local callback = ffi.callback(function(a, b)
+    return a + b
+end, "i32", {"i32", "i32"})
+
+-- Pass the callback pointer to a C function
+lib:call("register_callback", "void", {"pointer"}, callback.ptr)
+
+-- Callback properties
+print(callback.retType)   --> "i32"
+print(callback.argCount)  --> 2
+print(callback.isValid)   --> true
+```
+
+## Listing Exports
+
+Discover available functions in a library:
+
+```lua
+local lib = ffi.open("C:\\Windows\\System32\\user32.dll")
+
+-- Get all exported symbols
+local exports = lib:listExports()
+print("Found", #exports, "exports")
+
+-- Each export has name and optional ordinal
+for i, exp in ipairs(exports) do
+    print(exp.name, exp.ordinal)
+    if i >= 10 then break end -- First 10 only
+end
+```
+
 ## Type Utilities
 
 ```lua
@@ -209,6 +246,7 @@ lib:close()
 |----------|-------------|
 | `ffi.open(path)` | Load a native library |
 | `ffi.buffer(size)` | Allocate a memory buffer |
+| `ffi.callback(fn, retType, argTypes)` | Create callback from Lua function |
 | `ffi.string(ptr, len?)` | Read string from pointer |
 | `ffi.cast(ptr, type)` | Read value from pointer |
 | `ffi.sizeof(type)` | Get size of type in bytes |
@@ -229,8 +267,19 @@ lib:close()
 | `lib:callVoid(name)` | Call void function |
 | `lib:getSymbol(name)` | Get raw symbol pointer |
 | `lib:hasSymbol(name)` | Check if symbol exists |
+| `lib:listExports()` | List all exported symbols |
 | `lib:close()` | Unload library |
 | `lib.path` | Library path (readonly) |
+
+### FfiCallback
+
+| Property/Method | Description |
+|----------------|-------------|
+| `callback.ptr` | C function pointer |
+| `callback.retType` | Return type |
+| `callback.argCount` | Number of arguments |
+| `callback.isValid` | Whether callback is valid |
+| `callback:getPtr()` | Get function pointer |
 
 ### Buffer
 
