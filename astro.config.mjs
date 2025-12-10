@@ -17,7 +17,11 @@ export default defineConfig({
       head: [
         {
           tag: "meta",
-          attrs: { property: "og:image", content: "https://yanlvl99.github.io/lune-custom-build-doc/og-banner.svg" },
+          attrs: { property: "og:image", content: "https://raw.githubusercontent.com/yanlvl99/lune-custom-build-doc/main/public/og-banner.png" },
+        },
+        {
+          tag: "meta",
+          attrs: { property: "og:image:type", content: "image/png" },
         },
         {
           tag: "meta",
@@ -34,6 +38,10 @@ export default defineConfig({
         {
           tag: "meta",
           attrs: { name: "twitter:card", content: "summary_large_image" },
+        },
+        {
+          tag: "meta",
+          attrs: { name: "twitter:image", content: "https://raw.githubusercontent.com/yanlvl99/lune-custom-build-doc/main/public/og-banner.png" },
         },
       ],
       social: [
