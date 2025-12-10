@@ -27,32 +27,34 @@ Download the MSI installer for automatic PATH setup:
 
    ```bash title="Terminal"
    lune --version
-   ```
+````
 
-</Steps>
+\</Steps\>
 
 ## Manual Installation
 
-### Windows
+### Android (Termux)
 
-<Steps>
+Run these commands inside the Termux app (no root required):
 
-1. Download `lune-windows-x86_64.zip` from [Releases](https://github.com/yanlvl99/lune-custom-build/releases/latest)
+```bash title="Termux"
+# Download
+curl -LO [https://github.com/yanlvl99/lune-custom-build/releases/latest/download/lune-android-aarch64.tar.gz](https://github.com/yanlvl99/lune-custom-build/releases/latest/download/lune-android-aarch64.tar.gz)
+tar -xzf lune-android-aarch64.tar.gz
 
-2. Extract `lune.exe` to a folder (e.g., `C:\Program Files\Lune`)
+# Move to Termux bin folder (Termux doesn't use /usr/local/bin)
+mv lune $PREFIX/bin/
+chmod +x $PREFIX/bin/lune
 
-3. Add to PATH:
-   - Open Start → "Environment Variables"
-   - Edit `Path` → Add the folder path
-   - Click OK and restart terminal
+# Verify
+lune --version
+```
 
-</Steps>
-
-### Linux
+### Linux (PC)
 
 ```bash title="Terminal"
 # Download and extract
-curl -LO https://github.com/yanlvl99/lune-custom-build/releases/latest/download/lune-linux-x86_64.tar.gz
+curl -LO [https://github.com/yanlvl99/lune-custom-build/releases/latest/download/lune-linux-x86_64.tar.gz](https://github.com/yanlvl99/lune-custom-build/releases/latest/download/lune-linux-x86_64.tar.gz)
 tar -xzf lune-linux-x86_64.tar.gz
 
 # Move to PATH
@@ -63,14 +65,30 @@ chmod +x /usr/local/bin/lune
 lune --version
 ```
 
+### Windows (Manual)
+
+\<Steps\>
+
+1.  Download `lune-windows-x86_64.zip` from [Releases](https://github.com/yanlvl99/lune-custom-build/releases/latest)
+
+2.  Extract `lune.exe` to a folder (e.g., `C:\Program Files\Lune`)
+
+3.  Add to PATH:
+
+      - Open Start → "Environment Variables"
+      - Edit `Path` → Add the folder path
+      - Click OK and restart terminal
+
+\</Steps\>
+
 ### macOS
 
 ```bash title="Terminal"
 # Intel Mac
-curl -LO https://github.com/yanlvl99/lune-custom-build/releases/latest/download/lune-macos-x86_64.tar.gz
+curl -LO [https://github.com/yanlvl99/lune-custom-build/releases/latest/download/lune-macos-x86_64.tar.gz](https://github.com/yanlvl99/lune-custom-build/releases/latest/download/lune-macos-x86_64.tar.gz)
 
 # Apple Silicon (M1/M2/M3)
-curl -LO https://github.com/yanlvl99/lune-custom-build/releases/latest/download/lune-macos-aarch64.tar.gz
+curl -LO [https://github.com/yanlvl99/lune-custom-build/releases/latest/download/lune-macos-aarch64.tar.gz](https://github.com/yanlvl99/lune-custom-build/releases/latest/download/lune-macos-aarch64.tar.gz)
 
 # Extract and install
 tar -xzf lune-macos-*.tar.gz
@@ -83,7 +101,7 @@ chmod +x /usr/local/bin/lune
 [Rokit](https://github.com/rojo-rbx/rokit) is a toolchain manager for Roblox projects.
 
 ```bash title="Terminal"
-rokit add yanlvl99/lune-custom-build@0.10.7
+rokit add yanlvl99/lune-custom-build@0.10.8
 ```
 
 To upgrade:
@@ -97,7 +115,7 @@ rokit update lune
 Requires [Rust](https://rustup.rs/) installed:
 
 ```bash title="Terminal"
-git clone https://github.com/yanlvl99/lune-custom-build
+git clone [https://github.com/yanlvl99/lune-custom-build](https://github.com/yanlvl99/lune-custom-build)
 cd lune-custom-build
 cargo build --release
 ```
@@ -112,4 +130,6 @@ After installation, initialize your first project:
 lune --init
 ```
 
-Continue reading in the [Lune Book](../../the-book/1-hello-lune) for a complete introduction.
+Continue reading in the [suspicious link removed] for a complete introduction.
+
+```
