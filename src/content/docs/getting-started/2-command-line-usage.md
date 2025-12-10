@@ -100,3 +100,7 @@ echo "print 'Hello, terminal!'" | lune run -
 ---
 
 **Note:** Lune supports both `.luau` and `.lua` extensions, but `.luau` is recommended.
+
+---
+
+← [Installation](/getting-started/1-installation/) | **Next:** [Editor Setup](/getting-started/3-editor-setup/) →
