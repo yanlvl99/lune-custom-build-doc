@@ -121,4 +121,4 @@ db:close()
 
 ---
 
-← [Stdio](/api-reference/stdio/) | **Next:** [Task](/api-reference/task/) →
+← [Stdio](/lune-custom-build-doc/api-reference/stdio/) | **Next:** [Task](/lune-custom-build-doc/api-reference/task/) →

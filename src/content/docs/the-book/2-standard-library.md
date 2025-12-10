@@ -28,4 +28,4 @@ Throughout the rest of this book, we'll explore these libraries in detail and se
 
 ---
 
-← [Hello, Lune!](/the-book/1-hello-lune/) | **Next:** [Input & Output](/the-book/3-input-output/) →
+← [Hello, Lune!](/lune-custom-build-doc/the-book/1-hello-lune/) | **Next:** [Input & Output](/lune-custom-build-doc/the-book/3-input-output/) →

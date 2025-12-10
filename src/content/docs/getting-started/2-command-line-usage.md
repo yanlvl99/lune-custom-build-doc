@@ -103,4 +103,4 @@ echo "print 'Hello, terminal!'" | lune run -
 
 ---
 
-← [Installation](/getting-started/1-installation/) | **Next:** [Editor Setup](/getting-started/3-editor-setup/) →
+← [Installation](/lune-custom-build-doc/getting-started/1-installation/) | **Next:** [Editor Setup](/lune-custom-build-doc/getting-started/3-editor-setup/) →

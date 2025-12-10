@@ -56,4 +56,4 @@ If autocomplete isn't working:
 
 ---
 
-← [Command Line Usage](/getting-started/2-command-line-usage/) | **Next:** [Security](/getting-started/4-security/) →
+← [Command Line Usage](/lune-custom-build-doc/getting-started/2-command-line-usage/) | **Next:** [Security](/lune-custom-build-doc/getting-started/4-security/) →
