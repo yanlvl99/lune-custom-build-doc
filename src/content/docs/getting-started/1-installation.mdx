@@ -51,23 +51,45 @@ Download the appropriate MSI for your architecture:
 
 ### Android (Termux)
 
-Run these commands inside the Termux app (no root required):
+Run this one-liner to install everything automatically:
 
 ```bash title="Termux"
-# Download
-curl -LO https://github.com/yanlvl99/lune-custom-build/releases/latest/download/lune-android-aarch64.tar.gz
-tar -xzf lune-android-aarch64.tar.gz
-
-# Move to Termux bin folder (Termux doesn't use /usr/local/bin)
-mv lune $PREFIX/bin/
-chmod +x $PREFIX/bin/lune
-
-# Verify
+pkg update && pkg install -y curl libc++ zlib && \
+curl -LO https://github.com/yanlvl99/lune-custom-build/releases/latest/download/lune-android-aarch64.tar.gz && \
+tar -xzf lune-android-aarch64.tar.gz && \
+mv lune $PREFIX/bin/ && chmod +x $PREFIX/bin/lune && \
+rm lune-android-aarch64.tar.gz && \
+echo 'export LD_LIBRARY_PATH=$PREFIX/lib:$LD_LIBRARY_PATH' >> ~/.bashrc && \
+source ~/.bashrc && \
 lune --version
 ```
 
-<Aside type="note">
-If you get library errors, install dependencies: `pkg install zlib`
+Or step-by-step:
+
+```bash title="Termux"
+# 1. Install dependencies
+pkg update && pkg install -y curl libc++ zlib
+
+# 2. Download and install
+curl -LO https://github.com/yanlvl99/lune-custom-build/releases/latest/download/lune-android-aarch64.tar.gz
+tar -xzf lune-android-aarch64.tar.gz
+mv lune $PREFIX/bin/
+chmod +x $PREFIX/bin/lune
+
+# 3. Configure library path (add to ~/.bashrc for persistence)
+export LD_LIBRARY_PATH=$PREFIX/lib:$LD_LIBRARY_PATH
+echo 'export LD_LIBRARY_PATH=$PREFIX/lib:$LD_LIBRARY_PATH' >> ~/.bashrc
+
+# 4. Verify
+lune --version
+```
+
+<Aside type="caution" title="Android Limitations">
+The Android build does not include:
+- **Luau JIT** - Native code generation is disabled (interpreter only)
+- **FFI module** - Native library loading (`@lune/ffi`) is not available
+
+All other modules work normally.
 </Aside>
 
 ### Linux (PC)
