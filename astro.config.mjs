@@ -36,6 +36,14 @@ export default defineConfig({
               label: "Editor Setup",
               slug: "getting-started/3-editor-setup",
             },
+            {
+              label: "Security",
+              slug: "getting-started/4-security",
+            },
+            {
+              label: "Useful Examples",
+              slug: "getting-started/5-useful-examples",
+            },
           ],
         },
         {
