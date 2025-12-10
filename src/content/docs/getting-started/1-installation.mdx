@@ -4,15 +4,31 @@ title: Installation
 
 import { Aside, Steps } from "@astrojs/starlight/components";
 
-## Windows Installer (Recommended)
+## Quick Install (PowerShell)
 
-Download the MSI installer for automatic PATH setup:
+The fastest way to install on Windows - automatically detects your architecture (x64 or ARM64):
+
+```powershell title="PowerShell"
+irm https://raw.githubusercontent.com/yanlvl99/lune-custom-build/main/installer/install.ps1 | iex
+```
+
+This will:
+- Auto-detect x64 vs ARM64
+- Download the latest release
+- Install to `%LOCALAPPDATA%\Lune`
+- Add to your PATH
+
+## Windows Installer (MSI)
+
+Download the appropriate MSI for your architecture:
 
 <Steps>
 
 1. ### Download MSI
 
-   Go to [GitHub Releases](https://github.com/yanlvl99/lune-custom-build/releases/latest) and download `lune-installer.msi`.
+   Go to [GitHub Releases](https://github.com/yanlvl99/lune-custom-build/releases/latest) and download:
+   - **x64 (Intel/AMD)**: `lune-installer-x64.msi`
+   - **ARM64 (Snapdragon/etc)**: `lune-installer-arm64.msi`
 
 2. ### Run Installer
 
