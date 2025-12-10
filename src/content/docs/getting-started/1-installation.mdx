@@ -54,19 +54,6 @@ Download the appropriate MSI for your architecture:
 Run this one-liner to install everything automatically:
 
 ```bash title="Termux"
-pkg update && pkg install -y curl libc++ zlib && \
-curl -LO https://github.com/yanlvl99/lune-custom-build/releases/latest/download/lune-android-aarch64.tar.gz && \
-tar -xzf lune-android-aarch64.tar.gz && \
-mv lune $PREFIX/bin/ && chmod +x $PREFIX/bin/lune && \
-rm lune-android-aarch64.tar.gz && \
-echo 'export LD_LIBRARY_PATH=$PREFIX/lib:$LD_LIBRARY_PATH' >> ~/.bashrc && \
-source ~/.bashrc && \
-lune --version
-```
-
-Or step-by-step:
-
-```bash title="Termux"
 # 1. Install dependencies
 pkg update && pkg install -y curl libc++ zlib
 
