@@ -23,3 +23,7 @@ The chapters in this book are organized to build on each other, starting with th
 13. [FFI (Foreign Function Interface)](/the-book/13-ffi)
 
 By the end of this book, you'll understand how to use Lune for everything from simple automation scripts to complex networking applications, including database access and native library integration. Let's get started!
+
+---
+
+**Next:** [The Standard Library](/the-book/2-standard-library/) →

@@ -1,0 +1,309 @@
+---
+title: Useful Examples
+---
+
+import { Aside, Tabs, TabItem } from "@astrojs/starlight/components";
+
+A collection of practical Lune scripts for common tasks.
+
+## HTTP Requests
+
+### Simple GET Request
+
+```luau title="http-get.luau"
+local net = require("@lune/net")
+
+local response = net.request("https://api.github.com/users/octocat")
+
+if response.ok then
+    local data = net.jsonDecode(response.body)
+    print("Name:", data.name)
+    print("Bio:", data.bio)
+else
+    print("Error:", response.statusCode, response.statusMessage)
+end
+```
+
+### POST with JSON Body
+
+```luau title="http-post.luau"
+local net = require("@lune/net")
+
+local response = net.request({
+    url = "https://httpbin.org/post",
+    method = "POST",
+    headers = {
+        ["Content-Type"] = "application/json",
+    },
+    body = net.jsonEncode({
+        message = "Hello from Lune!",
+        timestamp = os.time(),
+    }),
+})
+
+print("Response:", response.body)
+```
+
+## File Operations
+
+### Read and Process JSON File
+
+```luau title="process-json.luau"
+local fs = require("@lune/fs")
+local net = require("@lune/net")
+
+-- Read JSON file
+local content = fs.readFile("config.json")
+local config = net.jsonDecode(content)
+
+-- Modify and save
+config.lastUpdated = os.date("%Y-%m-%d %H:%M:%S")
+
+fs.writeFile("config.json", net.jsonEncode(config, true))
+print("Config updated!")
+```
+
+### List Files Recursively
+
+```luau title="list-files.luau"
+local fs = require("@lune/fs")
+
+local function listFiles(dir, indent)
+    indent = indent or ""
+    for _, entry in ipairs(fs.readDir(dir)) do
+        local path = dir .. "/" .. entry
+        local isDir = fs.isDir(path)
+        print(indent .. (isDir and "📁 " or "📄 ") .. entry)
+        if isDir then
+            listFiles(path, indent .. "  ")
+        end
+    end
+end
+
+listFiles(".")
+```
+
+## Process Management
+
+### Run System Command
+
+```luau title="run-command.luau"
+local process = require("@lune/process")
+
+local result = process.exec("git", { "status" })
+
+if result.ok then
+    print("Git output:")
+    print(result.stdout)
+else
+    print("Error:", result.stderr)
+end
+```
+
+### Build Script with Multiple Commands
+
+```luau title="build.luau"
+local process = require("@lune/process")
+local fs = require("@lune/fs")
+
+local function run(cmd, args)
+    print("→ Running:", cmd, table.concat(args or {}, " "))
+    local result = process.exec(cmd, args or {})
+    if not result.ok then
+        error("Command failed: " .. result.stderr)
+    end
+    return result.stdout
+end
+
+-- Clean build directory
+if fs.isDir("build") then
+    fs.removeDir("build")
+end
+fs.writeDir("build")
+
+-- Run build steps
+run("npm", { "install" })
+run("npm", { "run", "build" })
+
+print("✅ Build complete!")
+```
+
+## Async and Tasks
+
+### Parallel HTTP Requests
+
+```luau title="parallel-requests.luau"
+local net = require("@lune/net")
+local task = require("@lune/task")
+
+local urls = {
+    "https://api.github.com/users/octocat",
+    "https://api.github.com/users/torvalds",
+    "https://api.github.com/users/gaearon",
+}
+
+local results = {}
+
+-- Spawn parallel requests
+for i, url in ipairs(urls) do
+    task.spawn(function()
+        local response = net.request(url)
+        if response.ok then
+            results[i] = net.jsonDecode(response.body)
+        end
+    end)
+end
+
+-- Wait for all to complete
+task.wait(2)
+
+-- Print results
+for i, data in pairs(results) do
+    print(i, data.name, data.followers, "followers")
+end
+```
+
+### Periodic Task
+
+```luau title="periodic-task.luau"
+local task = require("@lune/task")
+local datetime = require("@lune/datetime")
+
+local function checkHealth()
+    print("[" .. datetime.now():formatLocalTime("%H:%M:%S") .. "] Health check...")
+    -- Add your health check logic here
+end
+
+-- Run every 5 seconds
+while true do
+    checkHealth()
+    task.wait(5)
+end
+```
+
+## SQLite Database
+
+### Simple Database Operations
+
+```luau title="database.luau"
+local sql = require("@lune/sql")
+
+-- Create or open database
+local db = sql.open("myapp.db")
+
+-- Create table
+db:execute([[
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        email TEXT UNIQUE,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+]])
+
+-- Insert data
+db:execute("INSERT INTO users (name, email) VALUES (?, ?)", "John Doe", "john@example.com")
+
+-- Query data
+local users = db:query("SELECT * FROM users WHERE name LIKE ?", "%John%")
+for _, user in ipairs(users) do
+    print(user.id, user.name, user.email)
+end
+
+db:close()
+```
+
+## Regex Pattern Matching
+
+### Extract Data with Regex
+
+```luau title="regex-extract.luau"
+local regex = require("@lune/regex")
+local fs = require("@lune/fs")
+
+-- Read log file
+local log = fs.readFile("server.log")
+
+-- Find all IP addresses
+local ipPattern = regex.new([[\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}]])
+
+for match in ipPattern:gmatch(log) do
+    print("Found IP:", match:getText())
+end
+
+-- Find all timestamps
+local timePattern = regex.new([[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}]])
+
+for match in timePattern:gmatch(log) do
+    print("Found Time:", match:getText())
+end
+```
+
+## CLI Tool Template
+
+### Complete CLI Script
+
+```luau title="cli-tool.luau"
+local process = require("@lune/process")
+local fs = require("@lune/fs")
+local stdio = require("@lune/stdio")
+
+local args = process.args
+
+local function printHelp()
+    print([[
+Usage: lune run cli-tool [command] [options]
+
+Commands:
+    init        Initialize a new project
+    build       Build the project
+    clean       Clean build artifacts
+    help        Show this help message
+    ]])
+end
+
+local function init()
+    print("Initializing project...")
+    fs.writeDir("src")
+    fs.writeFile("src/main.luau", '-- Main file\nprint("Hello!")')
+    print("✅ Project initialized!")
+end
+
+local function build()
+    print("Building...")
+    -- Add build logic
+    print("✅ Build complete!")
+end
+
+local function clean()
+    if fs.isDir("build") then
+        fs.removeDir("build")
+        print("✅ Cleaned build directory")
+    else
+        print("Nothing to clean")
+    end
+end
+
+-- Parse command
+local command = args[1] or "help"
+
+if command == "help" then
+    printHelp()
+elseif command == "init" then
+    init()
+elseif command == "build" then
+    build()
+elseif command == "clean" then
+    clean()
+else
+    print("Unknown command:", command)
+    printHelp()
+    process.exit(1)
+end
+```
+
+## Next Steps
+
+- Learn more about each module in the [API Reference](/api-reference/fs/)
+- Read [The Book](/the-book/1-hello-lune/) for in-depth tutorials
+- Explore [Roblox integration](/roblox/1-introduction/) for game development

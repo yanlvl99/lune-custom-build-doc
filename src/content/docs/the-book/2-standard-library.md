@@ -25,3 +25,7 @@ local process = require("@lune/process")
 The `@lune/` prefix tells Lune that you want to use one of its standard libraries rather than looking for a file in your project.
 
 Throughout the rest of this book, we'll explore these libraries in detail and see how they work together to make Lune scripts powerful and flexible.
+
+---
+
+← [Hello, Lune!](/the-book/1-hello-lune/) | **Next:** [Input & Output](/the-book/3-input-output/) →
