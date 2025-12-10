@@ -9,10 +9,33 @@ export default defineConfig({
   integrations: [
     starlight({
       title: "Lune Custom Build",
+      description: "A standalone Luau runtime for backend and game-server development",
       logo: {
         src: "./src/assets/logo.svg",
         replacesTitle: true,
       },
+      head: [
+        {
+          tag: "meta",
+          attrs: { property: "og:image", content: "https://yanlvl99.github.io/lune-custom-build-doc/og-banner.svg" },
+        },
+        {
+          tag: "meta",
+          attrs: { property: "og:image:width", content: "1200" },
+        },
+        {
+          tag: "meta",
+          attrs: { property: "og:image:height", content: "630" },
+        },
+        {
+          tag: "meta",
+          attrs: { property: "og:type", content: "website" },
+        },
+        {
+          tag: "meta",
+          attrs: { name: "twitter:card", content: "summary_large_image" },
+        },
+      ],
       social: [
         {
           icon: "github",
