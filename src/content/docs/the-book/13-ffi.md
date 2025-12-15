@@ -36,6 +36,16 @@ floats[0] = 10.5
 floats[1] = 20.25
 
 print(floats[0]) --> 10.5
+
+-- 5. Load native library with SmartLibrary (recommended)
+local C = ffi.ctypes
+local Kernel32 = ffi.load("kernel32.dll", {
+    GetCurrentProcessId = { ret = C.u32 },
+    Sleep = { args = { C.u32 } },
+})
+
+local pid = Kernel32.GetCurrentProcessId()
+print("PID:", pid)
 ```
 
 ## Memory Management (Arenas)
@@ -58,12 +68,17 @@ local p2 = arena:allocArray("i32", 100)
 Lune provides two distinct pointer types to prevent common arithmetic errors.
 
 ### RawPointer (void*)
+
 Used for generic memory and byte-level manipulation.
+
 - **Arithmetic**: `ptr + 1` advances by **1 byte**.
 - **No Indexing**: You cannot do `ptr[0]`.
+- **Methods**: `offset(bytes)`, `read(offset, ctype)`, `write(offset, ctype, value)`
 
 ### TypedPointer (T*)
+
 Used for accessing data arrays.
+
 - **Arithmetic**: `ptr + 1` advances by **sizeof(T)**.
 - **Indexing**: `ptr[0]` reads the first element.
 
@@ -102,28 +117,68 @@ player.health = 50
 print(player.x, player.health)
 ```
 
+### view:pointTo (Zero-GC Iteration)
+
+Repoint a view to iterate arrays without allocating new views:
+
+```lua
+local Point = ffi.struct({ {"x", "f32"}, {"y", "f32"} })
+local array = arena:allocArray("u8", 1000 * Point.size)
+local view = ffi.view(array, Point)
+
+for i = 0, 999 do
+    view:pointTo(array:offset(i * Point.size))
+    view.x = i * 0.5
+    view.y = i * 1.5
+end
+```
+
 ## Loading Libraries
 
 Use `ffi.load` to open native libraries (`.dll`, `.so`, `.dylib`).
 
+### SmartLibrary (Recommended)
+
+Pass an interface table to get direct function access:
+
 ```lua
-local lib = ffi.load("kernel32.dll")
+local C = ffi.ctypes
+
+local Kernel32 = ffi.load("kernel32.dll", {
+    GetCurrentProcessId = { ret = C.u32 },
+    Sleep = { args = { C.u32 } },
+    GetLastError = { args = {}, ret = C.u32 },
+    -- Constants
+    INFINITE = 0xFFFFFFFF,
+})
+
+-- Direct calls
+local pid = Kernel32.GetCurrentProcessId()
+Kernel32.Sleep(100)
+print(Kernel32.INFINITE)
 ```
 
-### Calling Functions
+### Type Constants (ffi.ctypes)
 
-The primary method for calling C functions is `lib:call`. You must provide the function name, return type, and a list of argument types.
+Use `ffi.ctypes` for type names instead of string literals:
 
 ```lua
--- DWORD GetCurrentProcessId(void)
-local pid = lib:call("GetCurrentProcessId", "u32", {})
+local C = ffi.ctypes
+print(C.u32)     -- "u32"
+print(C.f64)     -- "f64"
+print(C.string)  -- "string"
+```
 
-print("Process ID:", pid)
+### Legacy Mode
+
+Without interface, use `lib:call()`:
+
+```lua
+local lib = ffi.load("kernel32.dll")
+local pid = lib:call("GetCurrentProcessId", "u32", {})
 ```
 
 ### Optimized Calls
-
-For better performance, use the optimized methods for specific return types:
 
 | Method | Return Type | Description |
 |--------|-------------|-------------|
@@ -132,37 +187,40 @@ For better performance, use the optimized methods for specific return types:
 | `lib:callVoid` | `void` | No return value |
 | `lib:callString` | `string` | Returns C string |
 
-```lua
--- double sqrt(double)
-local val = lib:call("sqrt", "f64", {"f64"}, 16.0)
-
--- Optimized equivalents
-local val = msvcrt:callDouble("sqrt", {"f64"}, 16.0) -- WIP pseudo-example
-```
-
-> **Note:** The specialized methods like `callInt` often take fewer arguments or have specialized signatures. Check the API reference.
-
 ### Callbacks
 
 You can create Lua functions that C code can call ("function pointers").
 
 ```lua
--- 1. Define the callback
--- int comparator(int a, int b)
 local cb = ffi.callback(function(a, b)
-    print("Called from C:", a, b)
     return a - b
 end, "i32", {"i32", "i32"})
 
--- 2. Pass to C function
--- void qsort(void* base, size_t num, size_t size, int (*compar)(int,int))
-msvcrt:call("qsort", "void", {"pointer", "usize", "usize", "pointer"},
+-- Pass to C function
+lib:call("qsort", "void", {"pointer", "usize", "usize", "pointer"},
     arrayPtr, count, 4, cb.ptr)
 ```
 
-## Type System
+## Unsafe Intrinsics
 
-The `ffi.types` table contains constants for all supported C types.
+Direct memory access without safety checks. Maximum performance for hot paths.
+
+> **Caution:** No null checks, no bounds checks! Use only when certain about memory validity.
+
+```lua
+local addr = ptr.addr
+
+-- Direct read/write by address
+ffi.unsafe.write(addr, "i32", 12345)
+local val = ffi.unsafe.read(addr, "i32")
+
+-- Bulk operations (SIMD-optimized, 5-15 GB/s)
+ffi.unsafe.fill(addr, 1024, 0xFF)  -- memset
+ffi.unsafe.zero(addr, 1024)        -- zero memory
+ffi.unsafe.copy(dst, src, len)     -- memcpy
+```
+
+## Type System
 
 | Type | Size | Aliases |
 |------|------|---------|
@@ -175,8 +233,6 @@ The `ffi.types` table contains constants for all supported C types.
 | `pointer` | 4/8 bytes | `void*` |
 | `string` | 4/8 bytes | `char*` |
 
-You can check sizes dynamically:
-
 ```lua
 print(ffi.sizeof("i32"))  --> 4
 print(ffi.alignof("f64")) --> 8
@@ -184,23 +240,19 @@ print(ffi.alignof("f64")) --> 8
 
 ## Bulk Operations
 
-For high-performance memory manipulation, use the SIMD-optimized bulk operations instead of loops.
+For high-performance memory manipulation, use SIMD-optimized bulk operations:
 
 ```lua
--- Fill memory with 0x00 (memset)
-ffi.fill(ptr, 1024, 0)
-
--- Copy raw memory (memcpy)
-ffi.copy(dst, src, 512)
+ffi.fill(ptr, 1024, 0)       -- memset
+ffi.copy(dst, src, 512)      -- memcpy
+ffi.unsafe.zero(addr, 1024)  -- zero memory
 ```
 
 ## Migration Guide
 
-If you used the legacy API, here is how to upgrade:
-
 | Legacy | Modern | Why? |
 |--------|--------|------|
 | `ffi.buffer(size)` | `arena:alloc(size)` | Arenas prevent memory leaks. |
-| `buf:write(off, val)` | `ffi.write(ptr, off, val)` | Direct access is faster. |
-| Automatic arithmetic | `ffi.cast(ptr, "type")` | Explicit casting is safer. |
 | `ffi.open()` | `ffi.load()` | Consistent naming convention. |
+| `lib:call()` | SmartLibrary interface | Type-safe, direct calls. |
+| Manual `ptr + offset` | `ptr:offset(n)` | LSP-friendly pointer arithmetic. |
