@@ -18,11 +18,21 @@ local ints = ffi.cast(ptr, "i32")
 ints[0] = 42
 print(ints[0]) -- 42
 
--- Load native library
-local lib = ffi.load("kernel32.dll")
-local pid = lib:call("GetCurrentProcessId", "u32", {})
+-- Load native library with SmartLibrary interface (recommended)
+local C = ffi.ctypes
+local Kernel32 = ffi.load("kernel32.dll", {
+    GetCurrentProcessId = { ret = C.u32 },
+    Sleep = { args = { C.u32 } },
+    INFINITE = 0xFFFFFFFF,
+})
+
+local pid = Kernel32.GetCurrentProcessId()
 print("PID:", pid)
+Kernel32.Sleep(100)
 ```
+
+> [!TIP]
+> Use `ffi.load(path, interface)` for type-safe function bindings with direct call syntax.
 
 ---
 
@@ -206,11 +216,58 @@ arena:reset()  -- Free all
 
 ### load
 
-Loads a native library (.dll, .so, .dylib). Returns a `NativeLibrary` object.
+Loads a native library (.dll, .so, .dylib).
+
+**Without interface** - Returns legacy `Library` for `lib:call()` usage.
+**With interface** - Returns `SmartLibrary` for direct function access.
 
 ```lua
+-- Legacy mode
 local lib = ffi.load("kernel32.dll")
+local pid = lib:call("GetCurrentProcessId", "u32", {})
+
+-- SmartLibrary mode (recommended)
+local C = ffi.ctypes
+local Kernel32 = ffi.load("kernel32.dll", {
+    GetCurrentProcessId = { ret = C.u32 },
+    Sleep = { args = { C.u32 } },
+    GetLastError = { args = {}, ret = C.u32 },
+    -- Constants
+    INFINITE = 0xFFFFFFFF,
+})
+
+-- Direct function calls
+local pid = Kernel32.GetCurrentProcessId()
+Kernel32.Sleep(100)
+print(Kernel32.INFINITE)  -- 4294967295
 ```
+
+### ctypes
+
+Type name constants for use in function signatures.
+
+```lua
+local C = ffi.ctypes
+
+print(C.u32)     -- "u32"
+print(C.f64)     -- "f64"
+print(C.pointer) -- "pointer"
+print(C.string)  -- "string"
+```
+
+Available: `void`, `bool`, `i8`, `u8`, `i16`, `u16`, `i32`, `u32`, `i64`, `u64`, `f32`, `f64`, `isize`, `usize`, `pointer`, `string`
+
+### SmartLibrary
+
+Returned by `ffi.load(path, interface)`. Provides direct function access.
+
+**Properties:**
+- `path` - Library path
+
+**Methods:**
+- `close()` - Unload library
+
+**Dynamic fields:** Functions and constants from interface
 
 ### open
 
@@ -219,7 +276,7 @@ local lib = ffi.load("kernel32.dll")
 
 Legacy alias for `ffi.load`.
 
-### NativeLibrary
+### Library (Legacy)
 
 Object representing a loaded library.
 
@@ -413,6 +470,63 @@ print(callback.ptr)  -- Function pointer
 - `retType` - Return type string
 - `argCount` - Number of arguments
 - `isValid` - Whether callback is valid
+
+---
+
+## Unsafe Intrinsics
+
+Direct memory access without safety checks. Maximum performance for hot paths.
+
+> [!CAUTION]
+> **No null checks, no bounds checks!** Use only when you're certain about memory validity.
+
+```lua
+local arena = ffi.arena()
+local ptr = arena:alloc(1024)
+local addr = ptr.addr
+
+-- Direct read/write by address
+ffi.unsafe.write(addr, "i32", 12345)
+local val = ffi.unsafe.read(addr, "i32")
+
+-- Bulk operations (SIMD-optimized, 5-15 GB/s)
+ffi.unsafe.fill(addr, 1024, 0xFF)  -- memset
+ffi.unsafe.zero(addr, 1024)        -- zero memory
+ffi.unsafe.copy(dst, src, len)     -- memcpy
+```
+
+**Methods:**
+
+| Method | Description |
+|--------|-------------|
+| `read(addr, ctype)` | Read value from address |
+| `write(addr, ctype, value)` | Write value to address |
+| `copy(dst, src, len)` | Copy memory (no overlap check) |
+| `fill(addr, len, byte)` | Fill memory with byte |
+| `zero(addr, len)` | Zero memory |
+
+---
+
+## StructView Methods
+
+### pointTo
+
+Repoints a view to a different address. Zero allocations - ideal for iterating arrays.
+
+```lua
+local arena = ffi.arena()
+local Point = ffi.struct({ {"x", "f32"}, {"y", "f32"} })
+local array = arena:allocArray("u8", 1000 * Point.size)
+
+-- Create one view, reuse for all iterations
+local view = ffi.view(array, Point)
+
+for i = 0, 999 do
+    view:pointTo(array:offset(i * Point.size))
+    view.x = i * 0.5
+    view.y = i * 1.5
+end
+```
 
 ---
 
