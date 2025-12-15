@@ -136,6 +136,7 @@ Defines a C-ABI struct layout.
 
 ```lua
 local Player = ffi.struct({
+    -- { Name, Type, [ArraySize] }
     { "x", "f32" },
     { "y", "f32" },
     { "health", "i32" },
@@ -205,7 +206,7 @@ arena:reset()  -- Free all
 
 ### load
 
-Loads a native library (.dll, .so, .dylib).
+Loads a native library (.dll, .so, .dylib). Returns a `NativeLibrary` object.
 
 ```lua
 local lib = ffi.load("kernel32.dll")
@@ -218,16 +219,110 @@ local lib = ffi.load("kernel32.dll")
 
 Legacy alias for `ffi.load`.
 
-### Library Methods
+### NativeLibrary
 
-- `hasSymbol(name)` → boolean
-- `getSymbol(name)` → RawPointer?
-- `listExports()` → { ExportInfo }
-- `call(name, ret, args, ...)` → any
-- `close()`
+Object representing a loaded library.
 
-> [!NOTE]
-> `lib:call()` is the legacy API. Future versions will support lazy symbol resolution.
+**Properties:**
+
+*   `path` (string): The path to the loaded library file.
+
+**Methods:**
+
+#### call
+
+Calls a function with an arbitrary signature.
+
+```lua
+lib:call(name, retType, argTypes, ...args)
+```
+*   `name`: Symbol name (string)
+*   `retType`: Return CType
+*   `argTypes`: Table of CTypes `{ "i32", "pointer" }`
+*   `args`: Argument values matching types
+
+#### callInt
+
+Optimized call for functions taking **zero arguments** and returning **i32**.
+
+```lua
+local val = lib:callInt("MyFunc")
+```
+
+#### callIntArg
+
+Optimized call for functions taking **one i64 argument** and returning **i32**.
+(Note: Argument is cast to C int/long depending on platform, usually passed as value).
+
+```lua
+local val = lib:callIntArg("MyFunc", 123)
+```
+
+#### callDouble
+
+Optimized call for functions taking **zero arguments** and returning **f64**.
+
+```lua
+local val = lib:callDouble("GetValue")
+```
+
+#### callVoid
+
+Optimized call for functions taking **zero arguments** and returning **void**.
+
+```lua
+lib:callVoid("Initialize")
+```
+
+#### callString
+
+Optimized call for functions taking **zero arguments** and returning **string** (char*).
+
+```lua
+local name = lib:callString("GetName")
+```
+
+#### callPtr
+
+Calls a function pointer directly. Useful for callbacks or dynamic function pointers.
+
+```lua
+lib:callPtr(funcPtr, retType, argTypes, ...args)
+```
+
+#### getSymbol
+
+Gets a raw pointer to an exported symbol.
+
+```lua
+local ptr = lib:getSymbol("my_func")
+```
+
+#### hasSymbol
+
+Checks if a symbol exists.
+
+```lua
+if lib:hasSymbol("my_func") then ... end
+```
+
+#### listExports
+
+Lists all exported symbols. Returns a table of `{ name: string, ordinal: number? }`.
+
+```lua
+for _, exp in ipairs(lib:listExports()) do
+    print(exp.name)
+end
+```
+
+#### close
+
+Unloads the library.
+
+```lua
+lib:close()
+```
 
 ---
 
@@ -258,6 +353,15 @@ Checks if pointer is null.
 if ffi.isNull(ptr) then
     print("null pointer")
 end
+```
+
+### types
+
+Table containing all C type constants and utilities.
+
+```lua
+print(ffi.types.int)      -- "i32"
+print(ffi.types.void)     -- "void"
 ```
 
 ---
@@ -305,10 +409,10 @@ print(callback.ptr)  -- Function pointer
 ```
 
 **Properties:**
-- `ptr` - C function pointer
-- `retType` - Return type
-- `argCount` - Argument count
-- `isValid` - Whether valid
+- `ptr` - C function pointer (RawPointer)
+- `retType` - Return type string
+- `argCount` - Number of arguments
+- `isValid` - Whether callback is valid
 
 ---
 

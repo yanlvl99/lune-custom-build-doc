@@ -1,297 +1,206 @@
 ---
-title: FFI (Foreign Function Interface)
-description: Load and call native libraries from Luau with no limitations
+title: Foreign Function Interface
+description: Load and call native libraries with zero-copy memory access
 ---
 
-FFI allows you to load native libraries (.dll, .so, .dylib) and call functions with **any signature** using the powerful libffi backend.
+The FFI module provides **zero-copy memory access** and native library loading for high-performance interop with C/C++ libraries.
 
-> **Warning:** FFI is inherently unsafe. Incorrect usage can crash the runtime. Only use with trusted native libraries.
+Unlike traditional FFIs that copy data back and forth, Lune's FFI gives you direct, typed access to memory using efficient pointers and struct views.
 
-## Quick Start
+> **Warning:** FFI is inherently unsafe. Writing to the wrong memory address can crash the runtime. Always ensure your pointers and offsets are correct.
+
+## The Zero-Copy Workflow
+
+Modern FFI usage in Lune revolves around three core concepts:
+
+1. **Arenas**: Scoped memory allocators that handle cleanup for you.
+2. **Pointers**: Two-tiered system (`RawPointer` for byte access, `TypedPointer` for array access).
+3. **Structs**: C-ABI compliant schemas that map Lua fields to memory offsets.
+
+### Quick Start
 
 ```lua
 local ffi = require("@lune/ffi")
 
--- Load a native library
-local lib = ffi.open("mylib.dll")  -- Windows
--- local lib = ffi.open("./libmylib.so")  -- Linux
--- local lib = ffi.open("./libmylib.dylib")  -- macOS
+-- 1. Create a memory arena (freed when garbage collected)
+local arena = ffi.arena()
+
+-- 2. Allocate memory (returns RawPointer)
+local raw = arena:alloc(1024)
+
+-- 3. Cast to typed pointer for array access
+local floats = ffi.cast(raw, "f32")
+
+-- 4. Direct Zero-Copy Access
+floats[0] = 10.5
+floats[1] = 20.25
+
+print(floats[0]) --> 10.5
 ```
 
-## Calling Functions (Dynamic API)
+## Memory Management (Arenas)
 
-The most powerful feature is `lib:call()` which supports **any function signature**:
+Manual memory management (malloc/free) is error-prone. Lune uses **Arenas** to group allocations together.
 
 ```lua
--- lib:call(functionName, returnType, argTypes, ...)
-local result = lib:call("add", "i32", {"i32", "i32"}, 10, 20)
-print(result)  --> 30
+local arena = ffi.arena()
 
--- Void function
-lib:call("initialize", "void", {})
+-- All these allocations belong to 'arena'
+local p1 = arena:alloc(64)
+local p2 = arena:allocArray("i32", 100)
 
--- String return
-local name = lib:call("get_name", "string", {})
-
--- Pointer operations
-local ptr = lib:call("malloc", "pointer", {"u64"}, 1024)
-lib:call("free", "void", {"pointer"}, ptr)
+-- When 'arena' goes out of scope and is collected,
+-- ALL memory is freed automatically. No manual free() needed.
 ```
 
-## Supported Types
+## Pointer System
 
-| Type | Description | Lua Equivalent |
-|------|-------------|----------------|
-| `void` | No return value | `nil` |
-| `bool` | Boolean | `boolean` |
-| `i8`, `u8` | 8-bit integers | `number` |
-| `i16`, `u16` | 16-bit integers | `number` |
-| `i32`, `u32` | 32-bit integers (int) | `number` |
-| `i64`, `u64` | 64-bit integers (long) | `number` |
-| `f32` | 32-bit float | `number` |
-| `f64` | 64-bit double | `number` |
-| `pointer` | Raw pointer | `lightuserdata` or `nil` |
-| `string` | C string (char*) | `string` or `nil` |
+Lune provides two distinct pointer types to prevent common arithmetic errors.
 
-**Type aliases:** `int`=`i32`, `uint`=`u32`, `long`=`i64`, `float`=`f32`, `double`=`f64`, `char`=`i8`, `size_t`=`u64`
+### RawPointer (void*)
+Used for generic memory and byte-level manipulation.
+- **Arithmetic**: `ptr + 1` advances by **1 byte**.
+- **No Indexing**: You cannot do `ptr[0]`.
 
-## Memory Buffers
-
-Allocate and manipulate raw memory for struct handling:
+### TypedPointer (T*)
+Used for accessing data arrays.
+- **Arithmetic**: `ptr + 1` advances by **sizeof(T)**.
+- **Indexing**: `ptr[0]` reads the first element.
 
 ```lua
--- Create a 64-byte buffer
-local buf = ffi.buffer(64)
+local raw = arena:alloc(100)
 
--- Write values
-buf:write(0, "i32", 42)       -- Write int at offset 0
-buf:write(4, "f64", 3.14)     -- Write double at offset 4
-buf:writeString(12, "Hello")  -- Write string at offset 12
+-- Cast void* -> i32*
+local ints = ffi.cast(raw, "i32")
 
--- Read values
-local num = buf:read(0, "i32")
-local pi = buf:read(4, "f64")
-local str = buf:readString(12)
-
--- Get pointer for passing to C functions
-local ptr = buf.ptr
-lib:call("process_data", "void", {"pointer"}, ptr)
-
--- Zero the buffer
-buf:zero()
+ints[0] = 123     -- Writes at offset 0
+ints[1] = 456     -- Writes at offset 4 (sizeof i32)
 ```
 
-## Convenience Methods
+## Struct Mapping
 
-For simple cases, use these shortcuts:
+Instead of manually calculating byte offsets (e.g., `ptr + 12`), define a Struct schema. Lune calculates standard C layout rules (padding, alignment) for you.
 
 ```lua
--- No arguments, returns i32
-local version = lib:callInt("get_version")
+-- Define layout
+local Player = ffi.struct({
+    -- { name, type, arraySize? }
+    { "x", "f32" },
+    { "y", "f32" },
+    { "health", "i32" },
+    { "name", "u8", 32 },  -- Fixed array [u8; 32]
+})
 
--- One i32 argument, returns i32
-local doubled = lib:callIntArg("double", 21)
+-- Allocate and View
+local raw = arena:alloc(Player.size)
+local player = ffi.view(raw, Player)
 
--- No arguments, returns f64
-local pi = lib:callDouble("get_pi")
+-- Field Access (Read/Write)
+player.x = 100.5
+player.health = 50
 
--- No arguments, returns string
-local name = lib:callString("get_name")
-
--- No arguments, no return
-lib:callVoid("initialize")
+print(player.x, player.health)
 ```
 
-## Working with Pointers
+## Loading Libraries
+
+Use `ffi.load` to open native libraries (`.dll`, `.so`, `.dylib`).
 
 ```lua
--- Get raw symbol address
-local funcPtr = lib:getSymbol("my_function")
-
--- Check for null
-if ffi.isNull(ptr) then
-    print("Pointer is null")
-end
-
--- ffi.null is a null pointer constant
-local nullPtr = ffi.null
-
--- Read string from pointer
-local str = ffi.string(ptr)
-local strWithLen = ffi.string(ptr, 10)  -- Read exactly 10 bytes
-
--- Cast pointer to value
-local value = ffi.cast(ptr, "i32")
+local lib = ffi.load("kernel32.dll")
 ```
 
-## Callbacks
+### Calling Functions
 
-Create Lua functions that can be called from C code:
+The primary method for calling C functions is `lib:call`. You must provide the function name, return type, and a list of argument types.
 
 ```lua
--- Create a callback with signature: int callback(int a, int b)
-local callback = ffi.callback(function(a, b)
-    return a + b
+-- DWORD GetCurrentProcessId(void)
+local pid = lib:call("GetCurrentProcessId", "u32", {})
+
+print("Process ID:", pid)
+```
+
+### Optimized Calls
+
+For better performance, use the optimized methods for specific return types:
+
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `lib:callInt` | `i32` | Fast path for integers |
+| `lib:callDouble` | `f64` | Fast path for doubles |
+| `lib:callVoid` | `void` | No return value |
+| `lib:callString` | `string` | Returns C string |
+
+```lua
+-- double sqrt(double)
+local val = lib:call("sqrt", "f64", {"f64"}, 16.0)
+
+-- Optimized equivalents
+local val = msvcrt:callDouble("sqrt", {"f64"}, 16.0) -- WIP pseudo-example
+```
+
+> **Note:** The specialized methods like `callInt` often take fewer arguments or have specialized signatures. Check the API reference.
+
+### Callbacks
+
+You can create Lua functions that C code can call ("function pointers").
+
+```lua
+-- 1. Define the callback
+-- int comparator(int a, int b)
+local cb = ffi.callback(function(a, b)
+    print("Called from C:", a, b)
+    return a - b
 end, "i32", {"i32", "i32"})
 
--- Pass the callback pointer to a C function
-lib:call("register_callback", "void", {"pointer"}, callback.ptr)
-
--- Callback properties
-print(callback.retType)   --> "i32"
-print(callback.argCount)  --> 2
-print(callback.isValid)   --> true
+-- 2. Pass to C function
+-- void qsort(void* base, size_t num, size_t size, int (*compar)(int,int))
+msvcrt:call("qsort", "void", {"pointer", "usize", "usize", "pointer"},
+    arrayPtr, count, 4, cb.ptr)
 ```
 
-## Listing Exports
+## Type System
 
-Discover available functions in a library:
+The `ffi.types` table contains constants for all supported C types.
+
+| Type | Size | Aliases |
+|------|------|---------|
+| `i8`, `u8` | 1 byte | `char`, `byte` |
+| `i16`, `u16` | 2 bytes | `short`, `ushort` |
+| `i32`, `u32` | 4 bytes | `int`, `uint` |
+| `i64`, `u64` | 8 bytes | `long`, `ulong` |
+| `f32` | 4 bytes | `float` |
+| `f64` | 8 bytes | `double` |
+| `pointer` | 4/8 bytes | `void*` |
+| `string` | 4/8 bytes | `char*` |
+
+You can check sizes dynamically:
 
 ```lua
-local lib = ffi.open("C:\\Windows\\System32\\user32.dll")
-
--- Get all exported symbols
-local exports = lib:listExports()
-print("Found", #exports, "exports")
-
--- Each export has name and optional ordinal
-for i, exp in ipairs(exports) do
-    print(exp.name, exp.ordinal)
-    if i >= 10 then break end -- First 10 only
-end
+print(ffi.sizeof("i32"))  --> 4
+print(ffi.alignof("f64")) --> 8
 ```
 
-## Type Utilities
+## Bulk Operations
+
+For high-performance memory manipulation, use the SIMD-optimized bulk operations instead of loops.
 
 ```lua
--- Get size of type
-local size = ffi.sizeof("i32")  --> 4
-local ptrSize = ffi.sizeof("pointer")  --> 8
+-- Fill memory with 0x00 (memset)
+ffi.fill(ptr, 1024, 0)
 
--- Type constants
-local t = ffi.types
-print(t.int)     --> "i32"
-print(t.double)  --> "f64"
+-- Copy raw memory (memcpy)
+ffi.copy(dst, src, 512)
 ```
 
-## Complete Example
+## Migration Guide
 
-### C Code (mathlib.c)
+If you used the legacy API, here is how to upgrade:
 
-```c
-#ifdef _WIN32
-#define EXPORT __declspec(dllexport)
-#else
-#define EXPORT
-#endif
-
-EXPORT int add(int a, int b) {
-    return a + b;
-}
-
-EXPORT double calculate(double x, double y, int op) {
-    switch(op) {
-        case 0: return x + y;
-        case 1: return x - y;
-        case 2: return x * y;
-        case 3: return x / y;
-        default: return 0;
-    }
-}
-
-EXPORT void process_buffer(int* data, int size) {
-    for (int i = 0; i < size; i++) {
-        data[i] *= 2;
-    }
-}
-```
-
-### Luau Code
-
-```lua
-local ffi = require("@lune/ffi")
-
-local lib = ffi.open("mathlib.dll")
-
--- Call with multiple arguments
-local sum = lib:call("add", "i32", {"i32", "i32"}, 10, 20)
-print("10 + 20 =", sum)  --> 30
-
--- Mixed types
-local result = lib:call("calculate", "f64", {"f64", "f64", "i32"}, 10.5, 2.5, 2)
-print("10.5 * 2.5 =", result)  --> 26.25
-
--- Pass buffer to C
-local buf = ffi.buffer(16)  -- 4 ints
-buf:write(0, "i32", 1)
-buf:write(4, "i32", 2)
-buf:write(8, "i32", 3)
-buf:write(12, "i32", 4)
-
-lib:call("process_buffer", "void", {"pointer", "i32"}, buf.ptr, 4)
-
--- Read back doubled values
-for i = 0, 3 do
-    print(buf:read(i * 4, "i32"))  --> 2, 4, 6, 8
-end
-
-lib:close()
-```
-
-## API Reference
-
-### ffi
-
-| Function | Description |
-|----------|-------------|
-| `ffi.open(path)` | Load a native library |
-| `ffi.buffer(size)` | Allocate a memory buffer |
-| `ffi.callback(fn, retType, argTypes)` | Create callback from Lua function |
-| `ffi.string(ptr, len?)` | Read string from pointer |
-| `ffi.cast(ptr, type)` | Read value from pointer |
-| `ffi.sizeof(type)` | Get size of type in bytes |
-| `ffi.alignof(type)` | Get alignment of type |
-| `ffi.isNull(ptr)` | Check if pointer is null |
-| `ffi.null` | Null pointer constant |
-| `ffi.types` | Type constants table |
-
-### NativeLibrary
-
-| Method | Description |
-|--------|-------------|
-| `lib:call(name, retType, argTypes, ...)` | Call any function |
-| `lib:callInt(name)` | Call function returning i32 |
-| `lib:callIntArg(name, arg)` | Call with i32 arg, returns i32 |
-| `lib:callDouble(name)` | Call function returning f64 |
-| `lib:callString(name)` | Call function returning string |
-| `lib:callVoid(name)` | Call void function |
-| `lib:getSymbol(name)` | Get raw symbol pointer |
-| `lib:hasSymbol(name)` | Check if symbol exists |
-| `lib:listExports()` | List all exported symbols |
-| `lib:close()` | Unload library |
-| `lib.path` | Library path (readonly) |
-
-### FfiCallback
-
-| Property/Method | Description |
-|----------------|-------------|
-| `callback.ptr` | C function pointer |
-| `callback.retType` | Return type |
-| `callback.argCount` | Number of arguments |
-| `callback.isValid` | Whether callback is valid |
-| `callback:getPtr()` | Get function pointer |
-
-### Buffer
-
-| Property/Method | Description |
-|----------------|-------------|
-| `buf.size` | Buffer size in bytes |
-| `buf.ptr` | Raw pointer to buffer |
-| `buf:read(offset, type)` | Read typed value |
-| `buf:write(offset, type, value)` | Write typed value |
-| `buf:readBytes(offset, len)` | Read raw bytes |
-| `buf:writeBytes(offset, bytes)` | Write raw bytes |
-| `buf:readString(offset?)` | Read null-terminated string |
-| `buf:writeString(offset, str)` | Write string with null terminator |
-| `buf:zero()` | Fill buffer with zeros |
-| `buf:slice(offset, size)` | Get sub-buffer view |
+| Legacy | Modern | Why? |
+|--------|--------|------|
+| `ffi.buffer(size)` | `arena:alloc(size)` | Arenas prevent memory leaks. |
+| `buf:write(off, val)` | `ffi.write(ptr, off, val)` | Direct access is faster. |
+| Automatic arithmetic | `ffi.cast(ptr, "type")` | Explicit casting is safer. |
+| `ffi.open()` | `ffi.load()` | Consistent naming convention. |
